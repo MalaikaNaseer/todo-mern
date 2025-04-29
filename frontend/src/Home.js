@@ -2,7 +2,16 @@ import React, { useEffect, useState } from 'react';
 import Create from './Create';
 import './App.css';
 import axios from 'axios';
-import { BsCircleFill, BsFillCheckCircleFill, BsFillTrashFill, BsPencil } from 'react-icons/bs';
+import {
+    BsCircleFill,
+    BsFillCheckCircleFill,
+    BsFillTrashFill,
+    BsPencil
+} from 'react-icons/bs';
+//imported these libraries
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+dayjs.extend(relativeTime);
 
 const Home = () => {
     const [todos, setTodos] = useState([]);
@@ -18,7 +27,6 @@ const Home = () => {
     const edit = (id) => {
         axios.put(`http://localhost:5000/edit/${id}`)
             .then(result => {
-                console.log(result.data);
                 const updatedTodos = todos.map(todo => {
                     if (todo._id === id) {
                         return { ...todo, done: !todo.done };
@@ -33,7 +41,6 @@ const Home = () => {
     const Update = (id, updatedTask) => {
         axios.put(`http://localhost:5000/update/${id}`, { task: updatedTask })
             .then(result => {
-                console.log(result.data);
                 const updatedTodos = todos.map(todo => {
                     if (todo._id === id) {
                         return { ...todo, task: updatedTask };
@@ -43,7 +50,7 @@ const Home = () => {
                 setTodos(updatedTodos);
                 setTaskid('');
                 setUpdatetask('');
-                Window.location.reload();
+                window.location.reload(); // optional: remove for smoother UX
             })
             .catch(err => console.log(err));
     };
@@ -51,7 +58,6 @@ const Home = () => {
     const Hdelete = (id) => {
         axios.delete(`http://localhost:5000/delete/${id}`)
             .then(result => {
-                console.log(result.data);
                 const updatedTodos = todos.filter(todo => todo._id !== id);
                 setTodos(updatedTodos);
             })
@@ -62,36 +68,63 @@ const Home = () => {
         <main>
             <Create />
             {
-                todos.length === 0 ? <div className='task'>No tasks found</div> :
+                todos.length === 0 ? (
+                    <div className='task'>No tasks found</div>
+                ) : (
                     todos.map((todo) => (
                         <div className='task' key={todo._id}>
                             <div className='checkbox'>
-                                {todo.done ? <BsFillCheckCircleFill className='icon' /> :
-                                    <BsCircleFill className='icon' onClick={() => edit(todo._id)} />}
-                                {taskid === todo._id ?
-                                    <input type='text' value={updatetask} onChange={e => setUpdatetask(e.target.value)} />
-                                    :
+                                {todo.done ? (
+                                    <BsFillCheckCircleFill className='icon' />
+                                ) : (
+                                    <BsCircleFill className='icon' onClick={() => edit(todo._id)} />
+                                )}
+
+                                {taskid === todo._id ? (
+                                    <input
+                                        type='text'
+                                        value={updatetask}
+                                        onChange={e => setUpdatetask(e.target.value)}
+                                    />
+                                ) : (
                                     <p className={todo.done ? 'through' : 'normal'}>{todo.task}</p>
-                                }
+                                )}
+
+                                {/* Timestamp display */}
+                                {todo.createdAt && (
+                                    <p className='timestamp'>
+                                        {dayjs(todo.createdAt).fromNow()}
+                                    </p>
+                                )}
                             </div>
+
                             <div>
                                 <span>
-                                    <BsPencil className='icon' onClick={() => {
-                                        if (taskid === todo._id) {
-                                            Update(todo._id, updatetask);
-                                        } else {
+                                    {/* Edit icon toggles to ✅ when in editing mode */}
+                                    {taskid === todo._id ? (
+                                        <span className='icon' onClick={() => Update(todo._id, updatetask)}>✅</span>
+                                    ) : (
+                                        <BsPencil className='icon' onClick={() => {
                                             setTaskid(todo._id);
                                             setUpdatetask(todo.task);
+                                        }} />
+                                    )}
+
+                                    {/* Delete with confirmation */}
+                                    <BsFillTrashFill className='icon' onClick={() => {
+                                        if (window.confirm("Are you sure you want to delete this task?")) {
+                                            Hdelete(todo._id);
                                         }
                                     }} />
-                                    <BsFillTrashFill className='icon' onClick={() => Hdelete(todo._id)} />
                                 </span>
                             </div>
                         </div>
                     ))
+                )
             }
         </main>
     );
 };
 
 export default Home;
+
