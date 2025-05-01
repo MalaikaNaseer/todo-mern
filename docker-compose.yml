@@ -1,0 +1,34 @@
+version: '3'
+services:
+  mongo:
+    image: mongo:4.4
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - mern-network
+
+  backend:
+    image: malaikanaseer/mern-backend
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/tododb
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    networks:
+      - mern-network
+
+  frontend:
+    image: malaikanaseer/mern-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - mern-network
+
+volumes:
+  mongo-data:
+
+networks:
+  mern-network:

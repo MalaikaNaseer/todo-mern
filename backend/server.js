@@ -28,10 +28,18 @@ app.post('/add', (req, res) => {
 });
 
 app.get('/get', (req, res) => {
+  console.log('GET request received');
   TodoModel.find()
-    .then(result => res.json(result))
-    .catch(err => console.log(err));
+    .then(result => {
+      console.log('Data from DB:', result);
+      res.json(result);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).send('Error fetching data');
+    });
 });
+
 
 app.put('/edit/:id', (req, res) => {
   const { id } = req.params;
